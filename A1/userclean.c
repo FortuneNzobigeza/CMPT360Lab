@@ -39,10 +39,13 @@ int main(int argc, char* argv[]){
             }
 
         transform_specials(trial_username);
-
-        printf("New word: >%s<",trial_username);
+        printf("Word {%s}\n",trial_username);
+        transform_lowercase(trial_username);
+        printf("Word {%s}\n",trial_username);
+        transform_underscore(trial_username);
+        printf("Word {%s}\n",trial_username);
         
-
+            
         if (is_reserved_name(trial_username)){
                 printf("\nRESERVED NAME DETECTED");
                 free(trial_username);
@@ -72,17 +75,25 @@ int is_reserved_name(char* username){
     return 0;
 }
 
-// int is_special(char* username){
-    
-// }
 
-//void transform_lowercase(char* username)
 
-//void transform_underscore(char* username)
+void transform_lowercase(char* username){
+    for (int i=0;strlen(username)>i;i++){
+        *(username+i)=tolower(*(username+i));
+    }
+}
+
+void transform_underscore(char* username){
+    for (int i=0;strlen(username)>i;i++){
+        if(isspace(*(username+i))){
+            (*(username+i))=95;
+        }
+    }
+}
 
 void transform_specials(char* username){
     char* new_name = calloc(strlen(username)+1,sizeof(char));
-        if (!new_name){return 1;}
+        if (!new_name){return;}
 
     int count = 0;
     int offset=0;
