@@ -28,6 +28,8 @@ int main(){
 
     int name_size=obtain_username(trial_username);
     
+    char* original_username = calloc(name_size+1,sizeof(char));
+    strcpy(original_username,trial_username);
     
     
     // if ((fgets(trial_username,sizeof(trial_username),stdin))==NULL){
@@ -65,7 +67,7 @@ int main(){
             return 1;
         }
     
-    printf("%s : %s\n",trial_username,trial_username);
+    printf("%s : %s\n",original_username,trial_username);
     free(trial_username);
 
     
@@ -80,11 +82,14 @@ int obtain_username(char* username){
 
     while (1) {
         letter=getchar();
-        printf("letter: %c, %d\n", letter, letter);
-        if (letter<32){ //All ASCII codes below 32 cause the loop to break
+        printf("letter: %c, %d\n", letter, name_size);
+        if (letter<32){ //All ASCII codes below 32 or username reaches limit, cause the loop to break
             printf("name_size: %d\n",name_size);
             break;}
-
+        else if (name_size>15){
+            printf("name_size lol: %d\n",name_size);
+            username = realloc(username, sizeof(char)*strlen(username)+1);
+        }
         *(username+name_size)=letter;
         name_size++;
     }

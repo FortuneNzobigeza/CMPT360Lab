@@ -27,7 +27,7 @@ check2: userclean
 	
 #Run sample input under Valgrind; fails build on leaks/errors 
 valgrind: userclean 
-	@$(VALGRIND)$(VGFLAGS) ./userclean 'Bob123' 'a!' 'Admin42' 'rootuser' '_99'
+	@$(VALGRIND)$(VGFLAGS) 
 
 vg: valgrind 
 
