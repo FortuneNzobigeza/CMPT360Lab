@@ -13,6 +13,7 @@
 // https://www.tutorialspoint.com/cprogramming/c_input_output.htm (getchar and fgets)
 
 //Prototypes
+int obtain_username(char* username);
 int test_first_letter(int c); 
 int is_reserved_name(char* username);
 void transform_lowercase(char* username, int name_size);
@@ -22,23 +23,10 @@ void transform_specials(char* username, int name_size);
 //Main
 int main(){
     
-    char letter;
-    int name_size=0;
-    
     char* trial_username = calloc(17,sizeof(char));
-    if (!trial_username){return 1;} 
+    if (!trial_username) {return 1;} 
 
-    while (1) {
-        letter=getchar();
-        printf("letter: %c, %d\n", letter, letter);
-        if (letter<32){ //All ASCII codes below 32 cause the loop to break
-            printf("name_size: %d\n",name_size);
-            break;}
-
-        
-        *(trial_username+name_size)=letter;
-        name_size++;
-    }
+    int name_size=obtain_username(trial_username);
     
     
     
@@ -82,6 +70,26 @@ int main(){
 
     
 
+}
+
+
+int obtain_username(char* username){
+
+    int name_size = 0;
+    char letter;
+
+    while (1) {
+        letter=getchar();
+        printf("letter: %c, %d\n", letter, letter);
+        if (letter<32){ //All ASCII codes below 32 cause the loop to break
+            printf("name_size: %d\n",name_size);
+            break;}
+
+        *(username+name_size)=letter;
+        name_size++;
+    }
+
+    return name_size;
 }
 
 int test_first_letter(int c){
