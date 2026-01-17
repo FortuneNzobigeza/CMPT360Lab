@@ -18,57 +18,59 @@ int test_first_letter(int c);
 int is_reserved_name(char* username);
 void transform_lowercase(char* username, int name_size);
 void transform_underscore(char* username, int name_size);
-void transform_specials(char* username, int name_size);
+int transform_specials(char* username, int name_size);
+void realloc_str(char* str1, char* str2, int size);
+int shrink_username(char* username, int name_size);
 
 //Main
 int main(){
     
-    char* trial_username = calloc(17,sizeof(char));
-    if (!trial_username) {return 1;} 
+    char* original_username = calloc(17,sizeof(char));
+    if (!original_username) {return 1;} 
 
-    int name_size=obtain_username(trial_username);
+    int name_size=obtain_username(original_username);
     
-    char* original_username = calloc(name_size+1,sizeof(char));
-    strcpy(original_username,trial_username);
+    char* new_username = calloc(name_size+1,sizeof(char));
+    strcpy(new_username,original_username); //used notes from my cmpt201 teacher to get this idea
     
     
-    // if ((fgets(trial_username,sizeof(trial_username),stdin))==NULL){
+    // if ((fgets(new_username,sizeof(new_username),stdin))==NULL){
     //     printf("returns nothing\n");
     //     return 0;
     // };
     
-    
-    
-    //strcpy(trial_username,input_name); //used notes from my cmpt201 teacher to get this idea
 
     //TEst
-    printf("\nUsername I'm working with >%s< and its %d letters long\n",trial_username,name_size);
-    //printf("\nfirst letter I'm working with >%c<\n",*trial_username);
-    //printf("\nnext letter I'm working with >%c<\n",*(trial_username+1));
+    printf("\nUsername I'm working with >%s< and its %d letters long\n",new_username,name_size);
+    //printf("\nfirst letter I'm working with >%c<\n",*new_username);
+    //printf("\nnext letter I'm working with >%c<\n",*(new_username+1));
     //
 
-    if (!test_first_letter(*trial_username)){
-            printf("%s : invalid and unfixable\n",trial_username);
-            free(trial_username);
+    if (!test_first_letter(*new_username)){
+            printf("%s : invalid and unfixable\n",new_username);
+            free(new_username);
             return 1;
         }
-
-    transform_specials(trial_username,name_size);
-    //printf("Word {%s} \n",trial_username);
-    transform_lowercase(trial_username,name_size);
-    //printf("Word {%s}\n",trial_username);
-    transform_underscore(trial_username,name_size);
-    //printf("Word {%s}\n",trial_username);
+    
+    
+    name_size=shrink_username(new_username,name_size);
+    //name_size=transform_specials(new_username,name_size);
+    //printf("Word {%s} \n",new_username);
+    transform_lowercase(new_username,name_size);
+    //printf("Word {%s}\n",new_username);
+    transform_underscore(new_username,name_size);
+    //printf("Word {%s}\n",new_username);
+    
     
         
-    if (is_reserved_name(trial_username)){
-            printf("%s : invalid and unfixable\n",trial_username);
-            free(trial_username);
+    if (is_reserved_name(new_username)){
+            printf("%s : invalid and unfixable\n",new_username);
+            free(new_username);
             return 1;
         }
     
-    printf("%s : %s\n",original_username,trial_username);
-    free(trial_username);
+    printf("%s : %s\n",original_username,new_username);
+    free(new_username);
 
     
 
@@ -93,7 +95,7 @@ int obtain_username(char* username){
         *(username+name_size)=letter;
         name_size++;
     }
-
+    printf("namesize: %d, strlen: %d",name_size,strlen(username));
     return name_size;
 }
 
@@ -123,9 +125,9 @@ void transform_underscore(char* username, int name_size){
     }
 }
 
-void transform_specials(char* username, int name_size){
+int transform_specials(char* username, int name_size){
     char* new_name = calloc(name_size+1,sizeof(char));
-        if (!new_name){return;}
+    if (!new_name){return name_size;}
 
     int count = 0;
     int offset=0; //if "ad^m" program won't stop at "ad"
@@ -141,14 +143,36 @@ void transform_specials(char* username, int name_size){
         }
     }
 
-    strcpy(username,new_name);
+    realloc_str(username,new_name,count);
     free(new_name);
+
+    return count;
 }
 
 //void grow_username(char* username)
 
-//void shrink_username(char* username)
+int shrink_username(char* username, int name_size){
+    int max_size=16;
 
+    char* new_name = calloc(name_size+1,sizeof(char));
+    if (!new_name){return name_size;}
+    
+    if (name_size>max_size){
+        for (int i=0; i!=max_size;i++){
+            *(new_name+i)=*(username+i);
+        }
+    }
+    
+    realloc_str(username,new_name,max_size);
+    free(new_name);
+
+    return max_size;
+}
+
+void realloc_str(char* str1, char* str2, int size){
+    str1=realloc(str1, size*sizeof(char)+1);
+    strcpy(str1,str2);
+}
 //void print_username(char* username)
 
 
