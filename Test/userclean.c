@@ -21,11 +21,14 @@ void transform_underscore(char* username, int name_size);
 int transform_specials(char* username, int name_size);
 void realloc_str(char* str1, char* str2, int size);
 int shrink_username(char* username, int name_size);
+int grow_username(char* username, int name_size, int min_size);
 
 //Main
 int main(){
-    
-    char* original_username = calloc(17,sizeof(char));
+    int max_size=16;
+    int min_size=3;
+
+    char* original_username = calloc(max_size+1,sizeof(char));
     if (!original_username) {return 1;} 
 
     int name_size=obtain_username(original_username);
@@ -46,14 +49,22 @@ int main(){
     //printf("\nnext letter I'm working with >%c<\n",*(new_username+1));
     //
 
+    
+    
+    if (name_size>max_size){
+        name_size=shrink_username(new_username,name_size);
+    }
+
+    if (name_size<min_size){
+        name_size=grow_username(new_username,name_size,min_size);
+    }
+
     if (!test_first_letter(*new_username)){
-            printf("%s : invalid and unfixable\n",new_username);
-            free(new_username);
-            return 1;
-        }
-    
-    
-    name_size=shrink_username(new_username,name_size);
+        printf("%s : invalid and unfixable\n",original_username);
+        free(new_username);
+        free(original_username);
+        return 1;
+    }
     //name_size=transform_specials(new_username,name_size);
     //printf("Word {%s} \n",new_username);
     transform_lowercase(new_username,name_size);
@@ -64,21 +75,19 @@ int main(){
     
         
     if (is_reserved_name(new_username)){
-            printf("%s : invalid and unfixable\n",new_username);
-            free(new_username);
-            return 1;
-        }
-    
+        printf("%s : invalid and unfixable\n",original_username);
+        free(new_username);
+        free(original_username);
+        return 1;
+    }
+
     printf("%s : %s\n",original_username,new_username);
     free(new_username);
-
-    
-
+    free(original_username);
 }
 
 
 int obtain_username(char* username){
-
     int name_size = 0;
     char letter;
 
@@ -149,7 +158,12 @@ int transform_specials(char* username, int name_size){
     return count;
 }
 
-//void grow_username(char* username)
+int grow_username(char* username, int name_size, int min_size){
+    int fill_amt=min_size-name_size;
+    strncat(username, "user", fill_amt);
+
+    return name_size+fill_amt;
+}
 
 int shrink_username(char* username, int name_size){
     int max_size=16;
