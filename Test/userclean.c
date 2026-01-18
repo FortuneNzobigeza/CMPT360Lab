@@ -11,6 +11,7 @@
 // https://www.tutorialspoint.com/c_standard_library/c_function_realloc.htm
 // https://stackoverflow.com/questions/8440816/message-warning-implicit-declaration-of-function (I was wondering why their were so many warnings saying implicit declaration)
 // https://www.tutorialspoint.com/cprogramming/c_input_output.htm (getchar and fgets)
+// https://stackoverflow.com/questions/4034392/makefile-error1
 
 //Prototypes
 int obtain_username(char* username);
@@ -20,70 +21,80 @@ void transform_lowercase(char* username, int name_size);
 void transform_underscore(char* username, int name_size);
 int transform_specials(char* username, int name_size);
 void realloc_str(char* str1, char* str2, int size);
-int shrink_username(char* username, int name_size);
+int shrink_username(char* username, int name_size, int max_size);
 int grow_username(char* username, int name_size, int min_size);
 
 //Main
 int main(){
     int max_size=16;
     int min_size=3;
+    int uh=0;
+    
+    while (1){
+        if (uh==2){return 1;}
+        printf("This is Attempt {%d}\n",uh);
+        uh++;
+        char* original_username = calloc(max_size+1,sizeof(char));
+        if (!original_username) {return 1;} 
 
-    char* original_username = calloc(max_size+1,sizeof(char));
-    if (!original_username) {return 1;} 
-
-    int name_size=obtain_username(original_username);
-    
-    char* new_username = calloc(name_size+1,sizeof(char));
-    strcpy(new_username,original_username); //used notes from my cmpt201 teacher to get this idea
-    
-    
-    // if ((fgets(new_username,sizeof(new_username),stdin))==NULL){
-    //     printf("returns nothing\n");
-    //     return 0;
-    // };
-    
-
-    //TEst
-    printf("\nUsername I'm working with >%s< and its %d letters long\n",new_username,name_size);
-    //printf("\nfirst letter I'm working with >%c<\n",*new_username);
-    //printf("\nnext letter I'm working with >%c<\n",*(new_username+1));
-    //
-
-    
-    
-    if (name_size>max_size){
-        name_size=shrink_username(new_username,name_size);
-    }
-
-    if (name_size<min_size){
-        name_size=grow_username(new_username,name_size,min_size);
-    }
-
-    if (!test_first_letter(*new_username)){
-        printf("%s : invalid and unfixable\n",original_username);
-        free(new_username);
-        free(original_username);
-        return 1;
-    }
-    //name_size=transform_specials(new_username,name_size);
-    //printf("Word {%s} \n",new_username);
-    transform_lowercase(new_username,name_size);
-    //printf("Word {%s}\n",new_username);
-    transform_underscore(new_username,name_size);
-    //printf("Word {%s}\n",new_username);
-    
-    
+        int name_size=obtain_username(original_username);
         
-    if (is_reserved_name(new_username)){
-        printf("%s : invalid and unfixable\n",original_username);
+        char* new_username = calloc(name_size+1,sizeof(char));
+        if (!new_username) {return 1;} 
+        strcpy(new_username,original_username); //used notes from my cmpt201 teacher to get this idea
+        
+        
+        // if ((fgets(new_username,sizeof(new_username),stdin))==NULL){
+        //     printf("returns nothing\n");
+        //     return 0;
+        // };
+        
+
+        //TEst
+        printf("\nUsername I'm working with >%s< and its %d letters long\n",new_username,name_size);
+        //printf("\nfirst letter I'm working with >%c<\n",*new_username);
+        //printf("\nnext letter I'm working with >%c<\n",*(new_username+1));
+        //
+
+        
+        
+        if (name_size>max_size){
+            name_size=shrink_username(new_username,name_size,max_size);
+        }
+
+        if (name_size<min_size){
+            name_size=grow_username(new_username,name_size,min_size);
+        }
+
+        if (!test_first_letter(*new_username)){
+            printf("%s : invalid and unfixable\n",original_username);
+            free(new_username);
+            free(original_username);
+            return 0;
+        }
+        //name_size=transform_specials(new_username,name_size);
+        //printf("Word {%s} \n",new_username);
+        transform_lowercase(new_username,name_size);
+        //printf("Word {%s}\n",new_username);
+        transform_underscore(new_username,name_size);
+        //printf("Word {%s}\n",new_username);
+        
+        
+            
+        if (is_reserved_name(new_username)){
+            printf("%s : invalid and unfixable\n",original_username);
+            free(new_username);
+            free(original_username);
+            return 0;
+            
+        }
+
+        printf("%s : %s\n",original_username,new_username);
         free(new_username);
         free(original_username);
-        return 1;
+        main();
     }
-
-    printf("%s : %s\n",original_username,new_username);
-    free(new_username);
-    free(original_username);
+    return 0;
 }
 
 
@@ -93,10 +104,11 @@ int obtain_username(char* username){
 
     while (1) {
         letter=getchar();
-        printf("letter: %c, %d\n", letter, name_size);
+        printf("letter: %c, %d\n", letter, letter);
         if (letter<32){ //All ASCII codes below 32 or username reaches limit, cause the loop to break
             printf("name_size: %d\n",name_size);
             break;}
+        
         else if (name_size>15){
             printf("name_size lol: %d\n",name_size);
             username = realloc(username, sizeof(char)*strlen(username)+1);
@@ -160,14 +172,13 @@ int transform_specials(char* username, int name_size){
 
 int grow_username(char* username, int name_size, int min_size){
     int fill_amt=min_size-name_size;
+    username=realloc(username, min_size*sizeof(char)+1);
     strncat(username, "user", fill_amt);
 
     return name_size+fill_amt;
 }
 
-int shrink_username(char* username, int name_size){
-    int max_size=16;
-
+int shrink_username(char* username, int name_size, int max_size){
     char* new_name = calloc(name_size+1,sizeof(char));
     if (!new_name){return name_size;}
     

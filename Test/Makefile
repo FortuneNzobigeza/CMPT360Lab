@@ -16,14 +16,17 @@ userclean:userclean.o
 userclean.o:userclean.c 
 	$(CC) $(CFLAGS) -c $< 
 
-check1: userclean
-	@./userclean 'Bob123' 'a!' 'Admin42' 'rootuser' '_99'
-check2: userclean
-#	@echo 'Bob123' | ./userclean 
-# 	@echo 'a!' | ./userclean 
-# 	@echo 'Admin42' | ./userclean 
-# 	@echo 'rootuser' | ./userclean 
-# 	@echo '_99' | ./userclean 
+
+check: userclean
+	@echo 'Bob123' | ./userclean 
+	@echo 'a!' | ./userclean 
+	@echo 'Admin 42' | ./userclean 
+	@echo 'root user' | ./userclean 
+	@echo 'ABCDEFGHI' | ./userclean
+	@echo 'test' | ./userclean 
+	@echo '_99' | ./userclean
+	@echo 'admin' | ./userclean
+	@echo 'root' | ./userclean
 	
 #Run sample input under Valgrind; fails build on leaks/errors 
 valgrind: userclean 
