@@ -17,7 +17,7 @@ all: sched
 sched:sched.o 
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) 
 
-sched.o:scheduling.c 
+sched.o:sched.c 
 	$(CC) $(CFLAGS) -c $< 
 
 

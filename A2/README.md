@@ -24,3 +24,6 @@ Teacher wrote in A2 -> In your README, briefly comment on how FCFS and RR behave
 
 Some ideas came from the Lab 1 file "process_controller.c" and how the input was retrieved using strcmp
  the main function was used
+
+ Resources:
+ https://www.w3schools.com/c/c_files_read.php 
