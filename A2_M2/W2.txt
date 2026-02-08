@@ -1,4 +1,4 @@
-# CMPT360 A2 — Workload W2 (convoy / quantum study)
+# CMPT360 A2 - Workload W2 (convoy / quantum study)
 # Format: PID ARRIVAL CPU_TIME
 0 0 12
 1 0 3

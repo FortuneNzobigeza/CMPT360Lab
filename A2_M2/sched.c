@@ -72,8 +72,7 @@ int read_my_file(char* filename){
 
 
     if (fptr == NULL) {
-        printf("Filename does not exist\n"); //make meaningful
-        
+        printf("Filename does not exist\n"); 
         return 1;
     }
     //char *file_line=malloc(256*sizeof(char));
@@ -93,6 +92,42 @@ int read_my_file(char* filename){
     return 0;
 }
 
+int read_file(char* filename){
+    FILE *fptr=NULL;
+    fptr = fopen(filename, "r");
+
+    if (fptr == NULL) {
+        printf("Filename does not exist\n"); 
+        return 1;
+    }
+    int pid=0, arrival=0, cpu_time=0, ret_val=1;
+    int count=0;
+    char c=0;
+    printf("At Whiteloop \n");
+    while (1){ //loop kinda works when there are no hashtags and other formats at the beginning
+        count++;
+        ret_val=fscanf(fptr,"%d %d %d",&pid,&arrival,&cpu_time);
+        
+        printf("ret_val='%d'\n",ret_val);
+        if (feof(fptr) || count==10){break;}
+        if (ret_val!=3){
+            while (c!=10){
+                c=fgetc(fptr);
+            }
+            
+        }
+        else {
+            printf("pid='%d'\narrival='%d'\ncpu_time='%d'\n",pid,arrival,cpu_time);
+        }
+    }
+
+    fclose(fptr);
+    return 0;
+}
+
+void fcfs_sim(){
+
+}
 
 int main(int argc, char *argv[]) {
 
@@ -129,7 +164,8 @@ int main(int argc, char *argv[]) {
 
         //test if argv[2] is not --in=blah
 
-        read_my_file(filename);
+        //read_my_file(filename);
+        read_file(filename);
         free(filename);
     } 
     
