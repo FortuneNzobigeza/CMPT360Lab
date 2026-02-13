@@ -76,33 +76,6 @@ int verify_argument(char* str, int argument_len){
     return 0;
 }
 
-
-int read_my_file(char* filename){
-    FILE *fptr=NULL;
-    fptr = fopen(filename, "r");
-
-
-    if (fptr == NULL) {
-        printf("Filename does not exist\n"); 
-        return 1;
-    }
-    //char *file_line=malloc(256*sizeof(char));
-    //char c=fgetc(fptr);
-
-    //either realloc memory everytime
-    
-    while (!feof(fptr)){
-        char c=fgetc(fptr);
-        if (c != -1 ) printf("%c",c); 
-    }
-    //printf("\n");
-    //what if you used fscanf since you know you will get three numbers so the formatting would be "%d %d %d",n1,n2,n3
-
-    //don't forget to close file
-    fclose(fptr);
-    return 0;
-}
-
 //Make sure to verify the format of the workload files; shoot an error if it's not in the right format
 int read_file(char* filename, int* processes, int* pids, int* arrivals, int* cpu_times, int amt_process){
     FILE *fptr=NULL;
