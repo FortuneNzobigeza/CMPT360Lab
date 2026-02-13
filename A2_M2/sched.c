@@ -206,7 +206,7 @@ int is_done(int* process_done, int pid, int done){
 //returns total time
 int print_time(int* cpu_times, int* process,int* arrivals, int* pids){
     int current_value=-1;
-    int current;
+    int current=0;
     int count_done=0;
     int* process_done = malloc ((*process)*sizeof(int));
     
@@ -242,57 +242,107 @@ int print_time(int* cpu_times, int* process,int* arrivals, int* pids){
     return time;
 }
 
-void fcfs(int* process, int* pids, int* arrivals, int* cpu_times){
-    int time= print_time(cpu_times, process, arrivals, pids);
+void print_stats_fsfc(int* process, int* pids, int* arrivals, int* cpu_times, int* completions, int* first_run_list){
+    int amt_of_processes=*process;
+    int* all_tat=malloc(amt_of_processes*sizeof(int));
+    int* all_rep=malloc(amt_of_processes*sizeof(int));
+    int total_ctx_switches= amt_of_processes-1;
+    int total_tat=0;
+    int total_rep=0;
+    for (int i=0;i<amt_of_processes;i++){
+        all_tat[i]=completions[i]-arrivals[i];
+        //printf("\nall_tat[i]==%d",all_tat[i]);
+        total_tat+=all_tat[i];
 
+        //printf("\n--first_run_list[i]=%d\narrivals[i]=%d",first_run_list[i],arrivals[i]);
+        all_rep[i]=first_run_list[i]-arrivals[i];
+        total_rep+=all_rep[i];
+        //printf("\nall_rep[i]==%d",all_rep[i]);
 
-    int current_value=-1;
-    int current;
+        printf("\nP%d: first run=%d completion=%d TAT=%d RESP=%d",pids[i],first_run_list[i],completions[i],all_tat[i],all_rep[i]);
+        //P0: first run=0 completion=4 TAT=4 RESP=0
+    }
+    double avg_tat =  ((double) total_tat/ (double) amt_of_processes);
+    double avg_rep =  ((double) total_rep/ (double) amt_of_processes);
+    //printf("\namt_of_processes=%d\ntotal_tat=%d\ntotal_rep=%d",amt_of_processes,total_tat,total_rep);
+    printf("\nSystem: ctx_switches=%d, avgTAT=%f, avgRESP=%f\n",total_ctx_switches,avg_tat,avg_rep);
+    //System: ctx_switches=2, avgTAT=4.667, avgRESP=2.000
+
     
+}
+
+void new_fcfs(int* process, int* pids, int* arrivals, int* cpu_times, int* completions, int* first_run_list, int* total_time_available){
+    int total_time=*total_time_available;
+    
+    int current_value=total_time+1;
+    int current=0;
+
     int count_done=0;
+
     int* process_done = malloc((*process)*sizeof(int));
-    int* process_order = malloc(time*sizeof(int));
-    for (int i=0;i<time;i++){
+    int* process_order = malloc(total_time*sizeof(int));
+    for (int i=0;i<total_time;i++){
         process_order[i]=-1;
     }
-    
-    int last_stop=0;
-    while(*process!=count_done){
+
+    for (int i=0;i<*process;i++){
+
+        //determine which process gets a turn
+        //is it smaller? And is it done?
         for (int y=0;y<*process;y++){
-            if (arrivals[y]>current_value && !is_done(process_done,pids[y],count_done)){
+            //printf("\n---y=%d\narrivals[y]=%d\ncurrent_value=%d",y,arrivals[y],current_value);
+            
+            if (arrivals[y]<current_value && !is_done(process_done,pids[y],count_done)){
                 current=y;
                 current_value=arrivals[y];
-                break;
+                //printf("inside if");
+            }
+            else if (is_done(process_done,pids[current],count_done)){
+                current=y;
+                current_value=arrivals[y];
             }
         }
         
-        int can_start=0;
-        int counter=0;
-        
-        //printf("\ncurrent pid:>%d<\n",pids[current]);
-        //printf("current arrival:>%d<\n",arrivals[current]);
-        // try to make somthing like last stop where you check the last stopped index and add from thereg
-        for (int i=0; last_stop<time;i++){
-            if (i==arrivals[current]){
-                can_start=1;
-            }
-            if (can_start){
-                counter=cpu_times[current]-1;
-                while (counter!=-1){
-                    process_order[i+counter]=pids[current];
-                    printf("process_order[%d]=%d",i+counter,process_order[i+counter]);
-                    counter--;
-                }
-                can_start=0;
-                break;
-            }
+        //printf("\n--current=%d",current);
+
+        int start=0;
+        int burst=cpu_times[current];
+        int first_run=0;
+        int completion_marker=0;
+        for (int time=0;time<total_time;time++){
             
+            if (time==arrivals[current]){
+                start=1;
+            }
+            if (start && burst && process_order[time]==-1){
+                if (!first_run){
+                    first_run=1;
+                    first_run_list[current]=time;
+                    
+                }
+                process_order[time]=pids[current];
+                burst--;
+                
+            }
+             if (!burst&!completion_marker){
+                    completion_marker=1;
+                    completions[current]=time+1;
+                }
+            
+            //printf("\ntimeslot >%d<\n",time);
+            //printf("process id >%d<\n\n",process_order[time]);
         }
+
+
+        process_done[i]=pids[current];
         count_done++;
+        
+
+
     }
 
     printf("\nrun : ");
-    for (int i=0;i<time;i++){
+    for (int i=0;i<total_time;i++){
         if (process_order[i]==-1){
             printf("- ");
         }
@@ -300,9 +350,15 @@ void fcfs(int* process, int* pids, int* arrivals, int* cpu_times){
             printf("%d ",process_order[i]);
         }
     }
+
+   
+    // for (int i=0;i<*process;i++){
+    //     printf("\nPD%d \n started at:%d \n done at: %d\n",pids[i],first_run_list[i],completions[i]);
+    // }
     free(process_done);
     free(process_order);
 }
+
 
 int main(int argc, char *argv[]) {
 
@@ -350,10 +406,21 @@ int main(int argc, char *argv[]) {
         int* pids=malloc(amt_process*sizeof(int)); //first position is pid 0, then pid 1 then so on..
         int* arrivals=malloc(amt_process*sizeof(int));
         int* cpu_times=malloc(amt_process*sizeof(int));
-        read_file(filename,&process,pids,arrivals,cpu_times,amt_process);
-        free(filename);
         
-        fcfs(&process,pids,arrivals,cpu_times);
+        read_file(filename,&process,pids,arrivals,cpu_times,amt_process);
+        int* completions=malloc(process*sizeof(int));
+        int* first_run_list=malloc(process*sizeof(int));
+        free(filename);
+
+
+        printf("\n===========================================\n");
+        int total_time=print_time(cpu_times, &process, arrivals, pids);
+        new_fcfs(&process,pids,arrivals,cpu_times,completions,first_run_list,&total_time);
+        //printf("\nAddress to first_run_list: %d",first_run_list[1]);
+        //printf("\nAddress to arrivals: %d",arrivals[1]);
+        print_stats_fsfc(&process,pids,arrivals,cpu_times,completions,first_run_list);
+        printf("\n===========================================\n");
+        
     } 
     
     // --- Option 2: Round Robin --- //
