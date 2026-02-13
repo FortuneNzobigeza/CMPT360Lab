@@ -38,6 +38,17 @@ void retrieve_filename(int filename_len, char* filename, char* str){
         *(filename+y)=str[i];
     }
 }
+
+int is_hashtag(char c){
+    if (c==35) {return 1;}
+    return 0;
+}
+
+int is_new_line(char c){
+    if (c==10) {return 1;}
+    return 0;
+}
+
 int verify_argument(char* str, int argument_len){
 
     char* test = malloc(sizeof(char)*6);
@@ -92,7 +103,8 @@ int read_my_file(char* filename){
     return 0;
 }
 
-int read_file(char* filename){
+//Make sure to verify the format of the workload files; shoot an error if it's not in the right format
+int read_file(char* filename, int* processes, int* pids, int* arrivals, int* cpu_times, int amt_process){
     FILE *fptr=NULL;
     fptr = fopen(filename, "r");
 
@@ -100,33 +112,196 @@ int read_file(char* filename){
         printf("Filename does not exist\n"); 
         return 1;
     }
-    int pid=0, arrival=0, cpu_time=0, ret_val=1;
-    int count=0;
+    int ret_val=1;
     char c=0;
-    printf("At Whiteloop \n");
+    int process=0; //amount of lines in file that is a process
+   
+    printf("At Whileloop \n");
     while (1){ //loop kinda works when there are no hashtags and other formats at the beginning
-        count++;
-        ret_val=fscanf(fptr,"%d %d %d",&pid,&arrival,&cpu_time);
-        
-        printf("ret_val='%d'\n",ret_val);
-        if (feof(fptr) || count==10){break;}
-        if (ret_val!=3){
-            while (c!=10){
+        if (feof(fptr)) {return 0;}
+
+        c=fgetc(fptr);
+        printf("\n--Found Character: >%c<\n",c);
+        if (c==-1){
+            break;
+        }
+
+        while (isblank(c)){
+            c=fgetc(fptr);
+        }
+
+        if (is_hashtag(c)||is_new_line(c)){ 
+            while(!is_new_line(c)) {c=fgetc(fptr);}
+            continue;
+        }
+
+        else if (!isdigit(c)){
+            printf("Error! Formatting is wrong");
+            return 1;
+        }
+
+        else {
+            //make a function to retrieve all the numbers, maybe pass the numbers as pointers and set the values
+            //also i will probably need to set up the pointers in main since i will need them later
+            //thinking of making a struct to hold the 3 variables together. I have to remember that each row will be combined to create the simulation
+            
+            //remember that i want to use scanf was the pid is found (just to simply everything lol)
+            int value_size=1;
+            char* value = malloc(value_size*sizeof(char));
+            
+            for (int i=0; i!=-1;i++){ //i wanted the 'i' variable
+                
+                value[i]=c;
                 c=fgetc(fptr);
+                if (isdigit(c)){
+                    value_size++;
+                    value=realloc(value,value_size*sizeof(char));
+                    continue;
+                }
+                else if (isblank(c)){ 
+                    if (process==amt_process){
+                        amt_process++;
+                        pids=realloc(pids,amt_process*sizeof(int)); 
+                    }
+                    pids[process]=atoi(value);
+                    
+                    free(value);
+                    
+                    ret_val=fscanf(fptr,"%d %d",arrivals+process,cpu_times+process);
+                    if (ret_val!=2){
+                        printf("Error! Formatting is wrong");
+                        return 1;
+                    }
+                    printf("pid='%d'\narrival='%d'\ncpu_time='%d'\n",*(pids+process),*(arrivals+process),*(cpu_times+process));
+                    break;
+                }
+                else{
+                    printf("Error! Formatting is wrong");
+                    free(value);
+                    return 1;
+                }
+                
             }
             
         }
-        else {
-            printf("pid='%d'\narrival='%d'\ncpu_time='%d'\n",pid,arrival,cpu_time);
-        }
+        process++;
     }
-
+    //printf("pid='%d'\narrival='%d'\ncpu_time='%d'\n",pid,arrival,cpu_time);
+    printf("process=%d",process);
+    *processes=process;
     fclose(fptr);
     return 0;
 }
 
-void fcfs_sim(){
+//checks if a process is finished all its jobs
+int is_done(int* process_done, int pid, int done){
+    for (int i=0; i<done; i++){
+        if (process_done[i]==pid){
+            return 1;
+        }
+    }
+    return 0;
+}
 
+//returns total time
+int print_time(int* cpu_times, int* process,int* arrivals, int* pids){
+    int current_value=-1;
+    int current;
+    int count_done=0;
+    int* process_done = malloc ((*process)*sizeof(int));
+    
+    
+    for (int y=0;y<*process;y++){
+        if (arrivals[y]>current_value && !is_done(process_done,pids[y],count_done)){
+            current=y;
+            current_value=arrivals[y];
+            break;
+        }
+    }
+    int time=arrivals[current]+cpu_times[current];
+    for (int i=1;i<*process;i++){
+        if (time>=arrivals[i]){
+            time+=cpu_times[i];
+        }
+        else{
+            time+=(arrivals[i]-time);
+            time+=cpu_times[i];
+        }
+    }
+    
+// arrivaltime+cpu_time=new_arrival_time
+// I was thinking of making 2 arrays; each index represents a process and one array represents 
+       
+
+    printf("\ntime: ");
+    for (int i=0;i<time;i++){
+        printf("%d ",i);
+    }
+    
+    free(process_done);
+    return time;
+}
+
+void fcfs(int* process, int* pids, int* arrivals, int* cpu_times){
+    int time= print_time(cpu_times, process, arrivals, pids);
+
+
+    int current_value=-1;
+    int current;
+    
+    int count_done=0;
+    int* process_done = malloc((*process)*sizeof(int));
+    int* process_order = malloc(time*sizeof(int));
+    for (int i=0;i<time;i++){
+        process_order[i]=-1;
+    }
+    
+    int last_stop=0;
+    while(*process!=count_done){
+        for (int y=0;y<*process;y++){
+            if (arrivals[y]>current_value && !is_done(process_done,pids[y],count_done)){
+                current=y;
+                current_value=arrivals[y];
+                break;
+            }
+        }
+        
+        int can_start=0;
+        int counter=0;
+        
+        //printf("\ncurrent pid:>%d<\n",pids[current]);
+        //printf("current arrival:>%d<\n",arrivals[current]);
+        // try to make somthing like last stop where you check the last stopped index and add from thereg
+        for (int i=0; last_stop<time;i++){
+            if (i==arrivals[current]){
+                can_start=1;
+            }
+            if (can_start){
+                counter=cpu_times[current]-1;
+                while (counter!=-1){
+                    process_order[i+counter]=pids[current];
+                    printf("process_order[%d]=%d",i+counter,process_order[i+counter]);
+                    counter--;
+                }
+                can_start=0;
+                break;
+            }
+            
+        }
+        count_done++;
+    }
+
+    printf("\nrun : ");
+    for (int i=0;i<time;i++){
+        if (process_order[i]==-1){
+            printf("- ");
+        }
+        else{
+            printf("%d ",process_order[i]);
+        }
+    }
+    free(process_done);
+    free(process_order);
 }
 
 int main(int argc, char *argv[]) {
@@ -145,7 +320,9 @@ int main(int argc, char *argv[]) {
             print_error();
             return 1;
         }
-        printf("hello1\n");
+        
+        printf("hello1");
+        
         // - Verify filename argument - //
         if (verify_argument(argv[2],5)){
             print_error();
@@ -165,8 +342,18 @@ int main(int argc, char *argv[]) {
         //test if argv[2] is not --in=blah
 
         //read_my_file(filename);
-        read_file(filename);
+        
+        
+        int amt_process = 1;
+        int process=0; //amount of lines in file that is a process
+        
+        int* pids=malloc(amt_process*sizeof(int)); //first position is pid 0, then pid 1 then so on..
+        int* arrivals=malloc(amt_process*sizeof(int));
+        int* cpu_times=malloc(amt_process*sizeof(int));
+        read_file(filename,&process,pids,arrivals,cpu_times,amt_process);
         free(filename);
+        
+        fcfs(&process,pids,arrivals,cpu_times);
     } 
     
     // --- Option 2: Round Robin --- //
